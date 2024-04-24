@@ -6,6 +6,34 @@ import plotly.graph_objects as go
 df = pd.read_csv('vehicles_us.csv')
 df['manufacturer'] = df['model'].apply(lambda x: x.split()[0])
 
+#Fill in median value of column for year and verify 
+df['model_year'].fillna(df['model_year'].median(), inplace=True)
+
+#cylindres: group by model fill by median cylindres odometer:
+df['cylinders'].fillna(df.groupby('model')['cylinders'].transform('median'), inplace=True)
+
+#group by model year(or year+model) fill by median(mean) odometer
+df['odometer'].fillna(df.groupby('model')['odometer'].transform('median'), inplace=True)
+
+# Calculate Q1 (25th percentile) and Q3 (75th percentile)
+Q1 = df['price'].quantile(0.25)
+Q3 = df['price'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+#Remove outliers
+df = df[(df['price'] >= lower_bound) & (df['price'] <= upper_bound)]
+
+# Calculate Q1 (25th percentile) and Q3 (75th percentile)
+Q1 = df['model_year'].quantile(0.25)
+Q3 = df['model_year'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+#Remove outliers
+df = df[(df['model_year'] >= lower_bound) & (df['model_year'] <= upper_bound)]
+
 st.header('View Data by Transmission Type')
 show_trans = st.checkbox('Not Automatic')
 if show_trans:
